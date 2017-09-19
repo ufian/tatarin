@@ -48,6 +48,16 @@ def _is_direct_message(sc, event):
 def message_event(sc, event):
     msg = event['text']
     
+    if _is_direct_message(sc, event) and 'вопросы' in msg:
+        parts = []
+        for q in Questions.objects.order_by('-date').limit(10):
+            parts.append(
+                '<@{0}>: {1}'.format(q.user, q.text)
+            )
+            
+        return '\n'.join(parts)
+        
+    
     if _is_bot_mention(sc, event) or _is_direct_message(sc, event):
         q = Questions(
             user=event['user'],
