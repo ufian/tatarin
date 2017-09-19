@@ -48,7 +48,7 @@ def _is_direct_message(sc, event):
 def message_event(sc, event):
     msg = event['text']
     
-    if _is_direct_message(sc, event) and 'вопросы' in msg:
+    if _is_direct_message(sc, event) and 'вопросы' in msg.lower():
         parts = []
         for q in Questions.objects.order_by('-date').limit(10):
             parts.append(
