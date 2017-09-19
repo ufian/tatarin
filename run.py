@@ -87,6 +87,7 @@ def main():
     logging.info("token: {}".format(slack_token))
     sc = SlackClient(slack_token)
     
+    get_connect()
 
     if sc.rtm_connect():
         while True:
