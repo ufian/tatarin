@@ -1,0 +1,21 @@
+version: "2"
+
+networks:
+  mynetwork:
+    external:
+      name: web
+
+services:
+  twitoryback:
+    image: ufian/tatarin
+    environment:
+    - SLACK_TOKEN
+    - LOG_LEVEL
+    command: python /src/run.py
+    volumes:
+    - .:/src
+    networks:
+      default: {}
+      mynetwork:
+        aliases:
+        - udmurt
