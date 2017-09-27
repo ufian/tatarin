@@ -50,7 +50,7 @@ def message_event(sc, event):
     
     if _is_direct_message(sc, event) and 'вопросы' in msg.lower():
         parts = []
-        for q in Questions.objects(user__ne="slackbot").order_by('-date').limit(10):
+        for q in Questions.objects(user__ne="USLACKBOT").order_by('-date').limit(10):
             parts.append(
                 '<@{0}>: {1}'.format(q.user, q.text)
             )
