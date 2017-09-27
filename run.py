@@ -95,19 +95,25 @@ def main():
     
     slack_token = getattr(config, "API_TOKEN", os.getenv("SLACK_TOKEN", ""))
     logging.info("token: {}".format(slack_token))
-    sc = SlackClient(slack_token)
     
-    get_connect()
-
-    if sc.rtm_connect():
-        while True:
-            try:
-                handle(sc, sc.rtm_read())
-            except:
-                logging.exception('Problem')
+    while True:
+        try:
+            sc = SlackClient(slack_token)
+            
+            get_connect()
+        
+            if sc.rtm_connect():
+                while True:
+                    try:
+                        handle(sc, sc.rtm_read())
+                    except:
+                        logging.exception('Problem')
+                    time.sleep(1)
+            else:
+                logging.error("Connection Failed, invalid token?")
+        except:
+            logging.exception('Global problem. Recreate app')
             time.sleep(1)
-    else:
-        logging.error("Connection Failed, invalid token?")
 
 
 if __name__ == "__main__":
