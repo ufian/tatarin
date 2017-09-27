@@ -50,7 +50,7 @@ def message_event(sc, event):
     
     if _is_direct_message(sc, event) and 'вопросы' in msg.lower():
         parts = []
-        for q in Questions.objects(user__ne="USLACKBOT").order_by('-date').limit(10):
+        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?').order_by('-date').limit(10):
             parts.append(
                 '<@{0}>: {1}'.format(q.user, q.text)
             )
@@ -58,7 +58,7 @@ def message_event(sc, event):
         return '\n'.join(parts)
         
     
-    if _is_bot_mention(sc, event) or _is_direct_message(sc, event):
+    if (_is_bot_mention(sc, event) and msg.startswith('<@U74JZCPA5>') or _is_direct_message(sc, event)) and msg.endswith('?'):
         q = Questions(
             user=event['user'],
             text=msg,
