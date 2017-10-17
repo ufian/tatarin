@@ -11,6 +11,11 @@ import random
 import datetime as dt
 from slackclient import SlackClient
 
+from slackclient._client import SlackNotConnected # not actually used, see https://github.com/slackapi/python-slackclient/issues/36
+from slackclient._server import SlackConnectionError
+from websocket import WebSocketConnectionClosedException
+from socket import error as SocketError
+
 import slackbot_settings as config
 
 import mongoengine as me
@@ -111,6 +116,9 @@ def main():
                     time.sleep(1)
             else:
                 logging.error("Connection Failed, invalid token?")
+        except (SocketError, WebSocketConnectionClosedException, SlackConnectionError, SlackNotConnected):
+            if not SlackClient(slack_token).rtm_connect():
+                logging.exception('Global reconnect problem')
         except:
             logging.exception('Global problem. Recreate app')
             time.sleep(1)
