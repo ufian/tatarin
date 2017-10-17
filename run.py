@@ -11,10 +11,16 @@ import random
 import datetime as dt
 from slackclient import SlackClient
 
-from slackclient._client import SlackNotConnected # not actually used, see https://github.com/slackapi/python-slackclient/issues/36
-from slackclient._server import SlackConnectionError
+
 from websocket import WebSocketConnectionClosedException
 from socket import error as SocketError
+
+try:
+    from slackclient._client import SlackNotConnected # not actually used, see https://github.com/slackapi/python-slackclient/issues/36
+    from slackclient._server import SlackConnectionError
+except ImportError:
+    SlackNotConnected = SocketError
+    SlackConnectionError = SocketError
 
 import slackbot_settings as config
 
