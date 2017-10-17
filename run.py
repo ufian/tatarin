@@ -69,7 +69,7 @@ def message_event(sc, event):
         return '\n'.join(parts)
         
     
-    if msg.endswith('?') and (
+    if msg.rstrip().endswith('?') and (
                 _is_bot_mention(sc, event) and (msg.startswith('<@U74JZCPA5>') or msg.startswith('@tatarin'))
                 or _is_direct_message(sc, event)
                 or msg.lower().startswith('вопрос:')
