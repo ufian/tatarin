@@ -69,7 +69,11 @@ def message_event(sc, event):
         return '\n'.join(parts)
         
     
-    if (_is_bot_mention(sc, event) and msg.startswith('<@U74JZCPA5>') or _is_direct_message(sc, event)) and msg.endswith('?'):
+    if msg.endswith('?') and (
+                _is_bot_mention(sc, event) and (msg.startswith('<@U74JZCPA5>') or msg.startswith('@tatarin'))
+                or _is_direct_message(sc, event)
+                or msg.lower().startswith('вопрос:')
+            ):
         q = Questions(
             user=event['user'],
             text=msg,
