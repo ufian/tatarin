@@ -61,7 +61,7 @@ def _is_bot_mention(sc, event):
 def _is_direct_message(sc, event):
     return event.get('channel').startswith('D')
 
-def _is_add_question(sc, event):
+def _is_question(sc, event):
     msg = event['text']
     msg_lower = msg.lower().rstrip()
     
@@ -90,8 +90,8 @@ def message_event(sc, event):
             
         return '\n'.join(parts)
         
-    if _is_add_question(sc, event):
-        if Questions.objects(user__eq=event['user'], date__gt=dt.datetime.now() - dt.timedelta(days=1)).count() > 3:
+    if _is_question(sc, event):
+        if Questions.objects(user=event['user'], date__gt=dt.datetime.now() - dt.timedelta(days=1)).count() > 3:
             return "Хватит, <@{0}>, присылать вопросы. Татрин советует вернуться завтра."
         
         q = Questions(
