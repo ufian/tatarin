@@ -45,6 +45,11 @@ class Questions(me.Document):
     text = me.StringField(required=True)
     date = me.DateTimeField(required=True)
 
+class User(me.Document):
+    meta = {'collection': 'questions'}
+    
+    user = me.StringField(required=True)
+    admin = me.BooleanField(required=True)
 
 def _is_bot_mention(sc, event):
     bot_user_name = sc.server.login_data['self']['id']
@@ -55,6 +60,23 @@ def _is_bot_mention(sc, event):
     
 def _is_direct_message(sc, event):
     return event.get('channel').startswith('D')
+
+def _is_add_question(sc, event):
+    msg = event['text']
+    msg_lower = msg.lower().rstrip()
+    
+    if not msg_lower.endswith('?'):
+        return False
+    
+    if _is_bot_mention(sc, event):
+        tatarin_aliases = ['<@U74JZCPA5>', '@tatarin']
+        return any(msg.startswith(alias) for alias in tatarin_aliases)
+
+    if _is_direct_message(sc, event):
+        return True
+    
+    question_forms = ['вопрос:', 'внимание, вопрос:']
+    return any(msg_lower.startswith(alias) for form in question_forms)
 
 def message_event(sc, event):
     msg = event['text']
@@ -68,12 +90,10 @@ def message_event(sc, event):
             
         return '\n'.join(parts)
         
-    
-    if msg.rstrip().endswith('?') and (
-                _is_bot_mention(sc, event) and (msg.startswith('<@U74JZCPA5>') or msg.startswith('@tatarin'))
-                or _is_direct_message(sc, event)
-                or msg.lower().startswith('вопрос:')
-            ):
+    if _is_add_question(sc, event):
+        if Questions.objects(user__eq=event['user'], date__gt=dt.datetime.now() - dt.timedelta(days=1)).count() > 3:
+            return "Хватит, <@{0}>, присылать вопросы. Татрин советует вернуться завтра."
+        
         q = Questions(
             user=event['user'],
             text=msg,
