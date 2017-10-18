@@ -76,7 +76,7 @@ def _is_question(sc, event):
         return True
     
     question_forms = ['вопрос:', 'внимание, вопрос:']
-    return any(msg_lower.startswith(alias) for form in question_forms)
+    return any(msg_lower.startswith(form) for form in question_forms)
 
 def message_event(sc, event):
     msg = event['text']
@@ -91,8 +91,9 @@ def message_event(sc, event):
         return '\n'.join(parts)
         
     if _is_question(sc, event):
-        if Questions.objects(user=event['user'], date__gt=dt.datetime.now() - dt.timedelta(days=1)).count() > 3:
-            return "Хватит, <@{0}>, присылать вопросы. Татрин советует вернуться завтра."
+        user = event['user']
+        if Questions.objects(user=user, date__gt=dt.datetime.now() - dt.timedelta(days=1)).count() >= 3:
+            return "Хватит, <@{0}>, присылать вопросы. Татрин советует вернуться завтра.".format(user)
         
         q = Questions(
             user=event['user'],
