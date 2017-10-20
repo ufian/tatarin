@@ -147,6 +147,23 @@ def _process_event(event):
     return True
 
 
+def _question_text(text):
+    prefixes = [
+        'вопрос:',
+        'внимание, вопрос:',
+        '<@u74jzcpa5>',
+        '@tatarin'
+    ]
+    
+    text_lower = text.lower()
+    
+    for prefix in prefixes:
+        if text_lower.startswith(prefix):
+            text = text[len(prefix):].strip()
+            text_lower = text_lower[len(prefix):].strip()
+            
+    return text.strip()
+
 
 def message_event(sc, event):
     if not _process_event(event):
@@ -166,10 +183,13 @@ def message_event(sc, event):
             list_q = list()
             
             for q in user_q:
-                if q.text in cache:
+                text = _question_text(q.text)
+                if text in cache:
                     continue
-                list_q.append(q.text)
-                cache.add(q.text)
+                if len(text) < 10:
+                    continue
+                list_q.append(text)
+                cache.add(text)
 
 
             if list_q:
