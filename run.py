@@ -152,7 +152,7 @@ def message_event(sc, event):
     if _is_list_request(sc, event):
         last_dt = _last_date_podcast()
         parts = ['Вопросы с {0}'.format(last_dt.strftime('%d %b %Y %H:%M:%S'))]
-        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?', date__dt=last_dt).order_by('-date'):
+        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?', date__gt=last_dt).order_by('-date'):
             parts.append(
                 '<@{0}>: {1}'.format(q.user, q.text)
             )
