@@ -9,6 +9,7 @@ import time
 import logging
 import random
 import datetime as dt
+from collections import defaultdict
 
 import requests as r
 from slackclient import SlackClient
@@ -152,10 +153,25 @@ def message_event(sc, event):
     if _is_list_request(sc, event):
         last_dt = _last_date_podcast()
         parts = ['Вопросы с {0}'.format(last_dt.strftime('%d %b %Y %H:%M:%S'))]
+        questions = defaultdict(list)
         for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?', date__gt=last_dt).order_by('-date'):
-            parts.append(
-                '<@{0}>: {1}'.format(q.user, q.text)
-            )
+            questions[q.user].append(q)
+
+        cache = set()
+        for user, user_q in questions.items():
+            list_q = list()
+            
+            for q in user_q:
+                if q.text in cache:
+                    continue
+                list_q.append(q.text)
+                cache.add(q.text)
+
+
+            if list_q:
+                parts.append('Вопросы от <@{0}>:'.format(user))
+                parts.extend(list_q)
+                parts.extend('')
             
         return '\n'.join(parts)
         
