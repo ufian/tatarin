@@ -208,6 +208,11 @@ def main():
             get_connect()
         
             if sc.rtm_connect():
+                sc.rtm_send_message(
+                    channel=u'C6HJ3R31C',
+                    message='Restarted {0}'.format(dt.datetime.now()),
+                )
+                
                 while True:
                     try:
                         handle(sc, sc.rtm_read())
