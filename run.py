@@ -130,6 +130,8 @@ def _process_event(event):
     if not timestamp or user:
         return True
     
+    
+    logging('Check ts={0} user={1}'.format(timestamp, user))
     if Messages.objects(timestamp=timestamp, user=user).count() > 0:
         logging.info('Skip message')
         return False
@@ -169,7 +171,7 @@ def message_event(sc, event):
 
 
             if list_q:
-                parts.append('Вопросы от <@{0}>:'.format(user))
+                parts.append('*Вопросы от* <@{0}>:'.format(user))
                 parts.extend(list_q)
                 parts.extend('.')
             
