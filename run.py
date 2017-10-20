@@ -194,8 +194,14 @@ def message_event(sc, event):
 
             if list_q:
                 parts.append('*Вопросы от* <@{0}>:'.format(user))
-                parts.extend(list_q)
+                
+                for i, q in enumerate(list_q):
+                    parts.extend("*{0}*. {1}".format(i, q))
                 parts.extend('.')
+            
+            
+        if parts[-1] == '.':
+            parts = parts[:-1]
             
         return '\n'.join(parts)
         
