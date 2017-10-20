@@ -127,9 +127,11 @@ def _process_event(event):
     timestamp = event.get('ts')
     user = event.get('user')
     
-    if not timestamp or user:
+    if not timestamp or not user:
         return True
     
+    if user == u'U74JZCPA5':
+        return False
     
     logging('Check ts={0} user={1}'.format(timestamp, user))
     if Messages.objects(timestamp=timestamp, user=user).count() > 0:
