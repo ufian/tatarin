@@ -133,7 +133,7 @@ def _process_event(event):
     if user == u'U74JZCPA5':
         return False
     
-    logging('Check ts={0} user={1}'.format(timestamp, user))
+    logging.info('Check ts={0} user={1}'.format(timestamp, user))
     if Messages.objects(timestamp=timestamp, user=user).count() > 0:
         logging.info('Skip message')
         return False
