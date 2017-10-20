@@ -209,7 +209,7 @@ def main():
         
             if sc.rtm_connect():
                 sc.rtm_send_message(
-                    channel=u'C6HJ3R31C',
+                    channel=u'D754XJPGA',
                     message='Restarted {0}'.format(dt.datetime.now()),
                 )
                 
