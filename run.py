@@ -175,7 +175,7 @@ def message_event(sc, event):
         last_dt = _last_date_podcast()
         parts = ['Вопросы с {0}'.format(last_dt.strftime('%d %b %Y %H:%M:%S'))]
         questions = defaultdict(list)
-        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?', date__gt=last_dt).order_by('-date'):
+        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?', date__gt=last_dt).order_by('+date'):
             questions[q.user].append(q)
 
         cache = set()
@@ -195,7 +195,7 @@ def message_event(sc, event):
             if list_q:
                 parts.append('*Вопросы от* <@{0}>:'.format(user))
                 
-                for i, q in enumerate(list_q):
+                for i, q in enumerate(list_q, start=1):
                     parts.append("*{0}*. {1}".format(i, q))
                 parts.append('.')
             
