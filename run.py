@@ -9,6 +9,8 @@ import time
 import logging
 import random
 import datetime as dt
+
+import requests as r
 from slackclient import SlackClient
 
 
@@ -84,6 +86,42 @@ def _is_question(sc, event):
     question_forms = ['вопрос:', 'внимание, вопрос:']
     return any(msg_lower.startswith(form) for form in question_forms)
 
+def _is_list_request(sc, event):
+    msg = event['text']
+    msg_lower = msg.lower().rstrip()
+
+    if not _is_direct_message(sc, event):
+        return False
+        
+    return 'вопросы' in msg_lower
+
+def _last_date_podcast():
+    try:
+        feed_url = "https://feeds.feedburner.com/rosnovsky"
+        req = r.get(feed_url)
+        if req.status_code != 200:
+            raise
+        
+        text = req.text
+        pos_start = text.find("<pubDate>")
+        pos_end = text.find("</pubDate>")
+        if pos_start == -1 or pos_end == -1:
+            raise
+        
+        pos_start += len("<pubDate>")
+        str_dt = text[pos_start: pos_end]
+        
+        if len(str_dt) < len("Sun, 08 Oct 2017 21:56:47"):
+            raise
+        
+        if not str_dt.endswith(" PDT"):
+            raise
+        
+        return dt.datetime.strptime(str_dt[:-4], "%a, %d %b %Y %H:%M:%S") - dt.timedelta(hours=10)
+
+    except:
+        return dt.datetime.now() - dt.timedelta(days=60)
+
 def _process_event(event):
     timestamp = event.get('ts')
     user = event.get('user')
@@ -103,15 +141,18 @@ def _process_event(event):
     m.save()
     return True
 
+
+
 def message_event(sc, event):
     if not _process_event(event):
         return
     
     msg = event['text']
     
-    if _is_direct_message(sc, event) and 'вопросы' in msg.lower():
-        parts = []
-        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?').order_by('-date').limit(10):
+    if _is_list_request(sc, event):
+        last_dt = _last_date_podcast()
+        parts = ['Вопросы с {0}'.format(last_dt.strftime('%d %b %Y %H:%M:%S'))]
+        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?', date__dt=last_dt).order_by('-date'):
             parts.append(
                 '<@{0}>: {1}'.format(q.user, q.text)
             )
