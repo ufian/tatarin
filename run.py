@@ -37,6 +37,12 @@ def get_connect():
         serverSelectionTimeoutMS=2500
     )
 
+class Messages(me.Document):
+    meta = {'collection': 'questions'}
+    
+    timestamp = me.DecimalField(precision=6)
+    user = me.StringField()
+    data = me.DictField()
 
 class Questions(me.Document):
     meta = {'collection': 'questions'}
@@ -78,7 +84,29 @@ def _is_question(sc, event):
     question_forms = ['вопрос:', 'внимание, вопрос:']
     return any(msg_lower.startswith(form) for form in question_forms)
 
+def _process_event(event):
+    timestamp = event.get('ts')
+    user = event.get('user')
+    
+    if not timestamp or user:
+        return True
+    
+    if Messages.objects(timestamp=timestamp, user=user).count() > 0:
+        logging.info('Skip message')
+        return False
+    
+    m = Messages(
+        timestamp=timestamp,
+        user=user,
+        data=event
+    )
+    m.save()
+    return True
+
 def message_event(sc, event):
+    if not _process_event(event):
+        return
+    
     msg = event['text']
     
     if _is_direct_message(sc, event) and 'вопросы' in msg.lower():
