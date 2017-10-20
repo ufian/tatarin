@@ -171,7 +171,7 @@ def message_event(sc, event):
             if list_q:
                 parts.append('Вопросы от <@{0}>:'.format(user))
                 parts.extend(list_q)
-                parts.extend('')
+                parts.extend('.')
             
         return '\n'.join(parts)
         
