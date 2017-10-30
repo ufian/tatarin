@@ -264,6 +264,7 @@ def main():
                         handle(sc, sc.rtm_read())
                     except:
                         logging.exception('Problem')
+                        raise
                     time.sleep(1)
             else:
                 logging.error("Connection Failed, invalid token?")
