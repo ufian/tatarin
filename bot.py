@@ -7,6 +7,7 @@ __author__ = 'ufian'
 import re
 import logging
 import datetime as dt
+from dateutil import parser as dp
 from collections import defaultdict
 
 import requests as r
@@ -90,34 +91,66 @@ def _is_list_request(sc, event):
     
     return 'вопросы' in msg_lower
 
-
-def _last_date_podcast():
-    try:
-        feed_url = "https://feeds.feedburner.com/rosnovsky"
-        req = r.get(feed_url)
-        if req.status_code != 200:
-            raise
-        
-        text = req.text
-        pos_start = text.find("<pubDate>")
-        pos_end = text.find("</pubDate>")
-        if pos_start == -1 or pos_end == -1:
-            raise
-        
-        pos_start += len("<pubDate>")
-        str_dt = text[pos_start: pos_end]
-        
-        if len(str_dt) < len("Sun, 08 Oct 2017 21:56:47"):
-            raise
-        
-        if not str_dt.endswith(" PDT"):
-            raise
-        
-        return dt.datetime.strptime(str_dt[:-4], "%a, %d %b %Y %H:%M:%S") - dt.timedelta(hours=10)
+class Podcast(object):
+    FEED_URL = "https://feeds.feedburner.com/rosnovsky"
     
-    except:
-        return dt.datetime.now() - dt.timedelta(days=60)
+    CACHE = None
+    CACHE_DT = None
+    
+    re_pubdate = re.compile('<pubDate>(.*)</pubDate>')
+    re_title = re.compile('<title>(.*)</title>')
 
+    def __init__(self):
+        self._update_cache()
+        self.podcasts = list()
+    
+    def _update_cache(self):
+        if Podcast.CACHE_DT is not None and (dt.datetime.now() - Podcast.CACHE_DT) < dt.timedelta(hours=8):
+            return
+        
+        try:
+            req = r.get(Podcast.FEED_URL)
+            
+            if '<pubDate>' not in req.text:
+                return
+
+            Podcast.CACHE = req.text
+            Podcast.CACHE_DT = dt.datetime.now()
+        except:
+            return
+        
+    def _parse_feed(self):
+        self.podcasts = list()
+        
+        if Podcast.CACHE is None:
+            return
+
+        parts = Podcast.CACHE.split('<item>')[1:]
+
+        for part in parts:
+            pubdate = self.re_pubdate.search(part)
+            title = self.re_title.search(part)
+            
+            try:
+                pubdate = dp.parse(pubdate)
+            except:
+                continue
+            
+            if not pubdate or not title:
+                continue
+
+            self.podcasts.append((pubdate, title))
+                
+    def info(self, shift=0):
+        self._parse_feed()
+        
+        if len(self.podcasts) == 0:
+            return (dt.datetime.now() - dt.timedelta(days=60), "Feed unavailable")
+        
+        if shift >= len(self.podcasts):
+            return self.podcasts[-1]
+        
+        return self.podcasts[shift]
 
 def _process_event(event):
     timestamp = event.get('ts')
@@ -168,10 +201,13 @@ def message_event(sc, event):
     msg = event['text']
     
     if _is_list_request(sc, event):
-        last_dt = _last_date_podcast()
-        parts = ['Вопросы с {0}'.format(last_dt.strftime('%d %b %Y %H:%M:%S'))]
+        shift = 0
+        podcast = Podcast()
+        podcast_dt, podcast_name = podcast.info(shift)
+        
+        parts = ['Вопросы с *{0}* ({1})'.format(podcast_name, podcast_dt.strftime('%d %b %Y %H:%M:%S'))]
         questions = defaultdict(list)
-        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?', date__gt=last_dt).order_by('+date'):
+        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?', date__gt=podcast_dt).order_by('+date'):
             questions[q.user].append(q)
         
         cache = set()
