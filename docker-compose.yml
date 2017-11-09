@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 
 networks:
   mynetwork:
@@ -19,3 +19,4 @@ services:
       mynetwork:
         aliases:
         - tatarin
+    build: .
