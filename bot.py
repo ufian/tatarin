@@ -116,6 +116,7 @@ class Podcast(object):
 
             Podcast.CACHE = req.text
             Podcast.CACHE_DT = dt.datetime.now()
+            
         except:
             return
         
@@ -131,13 +132,17 @@ class Podcast(object):
             pubdate = self.re_pubdate.search(part)
             title = self.re_title.search(part)
             
+            if not pubdate or not title:
+                continue
+    
+            pubdate = pubdate.group(1)
+            title = title.group(1)
+
             try:
                 pubdate = dp.parse(pubdate)
             except:
                 continue
             
-            if not pubdate or not title:
-                continue
 
             self.podcasts.append((pubdate, title))
                 
