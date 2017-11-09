@@ -72,12 +72,18 @@ def main():
                     message='Restarted {0}'.format(dt.datetime.now()),
                 )
                 
+                counter = 0
+                
                 while True:
                     try:
                         handle(sc, sc.rtm_read())
+                        counter = 0
                     except:
                         logging.exception('Problem')
-                        raise
+                        if counter < 5:
+                            counter += 1
+                        else:
+                            raise
                     time.sleep(1)
             else:
                 logging.error("Connection Failed, invalid token?")
