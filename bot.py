@@ -125,7 +125,6 @@ class Podcast(object):
     def __init__(self):
         self._update_cache()
         self._parse_feed()
-        self.podcasts = list()
     
     def _update_cache(self):
         if Podcast.CACHE_DT is not None and (dt.datetime.now() - Podcast.CACHE_DT) < dt.timedelta(hours=8):
