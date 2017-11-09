@@ -82,7 +82,7 @@ def _is_question(sc, event):
     return any(msg_lower.startswith(form) for form in question_forms)
 
 
-def _is_list_request(sc, event):
+def _is_questions_request(sc, event):
     msg = event['text']
     msg_lower = msg.lower().rstrip()
     
@@ -90,6 +90,28 @@ def _is_list_request(sc, event):
         return False
     
     return 'вопросы' in msg_lower
+
+def _get_questions_type(event):
+    msg = event['text']
+    msg_lower = msg.lower().rstrip()
+    
+    
+    _, _ , data = msg_lower.partition('вопросы')
+    
+    data = data.strip().split()
+    if data[0] == 'как' or data[0] == 'пример':
+        return 'HELP', "\n".join([
+            "Вопросы с 42 подкаста",
+            "Вопросы за последние 3 подкаста",
+        ])
+    elif len(data) >= 3 and data[-1].startswith('подкаст'):
+        if (data[0] == 'с' or data[0] == 'от'):
+            return 'NUMBER', int(data[1])
+        elif data[0] == 'за':
+            return 'SHIFT', int(data[-2]) - 1
+    
+    return None, None
+
 
 class Podcast(object):
     FEED_URL = "https://feeds.feedburner.com/rosnovsky"
@@ -102,6 +124,7 @@ class Podcast(object):
 
     def __init__(self):
         self._update_cache()
+        self._parse_feed()
         self.podcasts = list()
     
     def _update_cache(self):
@@ -147,8 +170,6 @@ class Podcast(object):
             self.podcasts.append((pubdate, title))
                 
     def info(self, shift=0):
-        self._parse_feed()
-        
         if len(self.podcasts) == 0:
             return (dt.datetime.now() - dt.timedelta(days=60), "Feed unavailable")
         
@@ -156,6 +177,19 @@ class Podcast(object):
             return self.podcasts[-1]
         
         return self.podcasts[shift]
+    
+    def info_number(self, number=0):
+        if len(self.podcasts) == 0:
+            return (dt.datetime.now() - dt.timedelta(days=60), "Feed unavailable")
+
+        number_str = "#{0:03d}".format(number)
+        
+        for pubdate, title in self.podcasts:
+            if number_str in title:
+                return (pubdate, title)
+            
+        return self.info()
+        
 
 def _process_event(event):
     timestamp = event.get('ts')
@@ -205,10 +239,19 @@ def message_event(sc, event):
     
     msg = event['text']
     
-    if _is_list_request(sc, event):
-        shift = 0
+    if _is_questions_request(sc, event):
+        q_type, q_param = _get_questions_type(event)
+        if q_type == 'HELP':
+            return q_param
+
         podcast = Podcast()
-        podcast_dt, podcast_name = podcast.info(shift)
+
+        if q_type == 'NUMBER':
+            podcast_dt, podcast_name = podcast.info_number(q_param)
+        elif q_type == 'SHIFT':
+            podcast_dt, podcast_name = podcast.info(q_param)
+        else:
+            podcast_dt, podcast_name = podcast.info()
         
         parts = ['Вопросы с *{0}* ({1})'.format(podcast_name, podcast_dt.strftime('%d %b %Y %H:%M:%S'))]
         questions = defaultdict(list)
