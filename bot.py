@@ -99,7 +99,9 @@ def _get_questions_type(event):
     _, _ , data = msg_lower.partition('вопросы')
     
     data = data.strip().split()
-    if data[0] == 'как' or data[0] == 'пример':
+    if len(data)==0 or len(data[0]) < 2:
+        return 'SHIFT', 0
+    elif data[0] == 'как' or data[0] == 'пример':
         return 'HELP', "\n".join([
             "Вопросы с 42 подкаста",
             "Вопросы за последние 3 подкаста",
