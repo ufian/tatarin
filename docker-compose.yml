@@ -8,6 +8,7 @@ networks:
 services:
   twitoryback:
     image: ufian/tatarin
+    restart: always
     environment:
     - SLACK_TOKEN
     - LOG_LEVEL
