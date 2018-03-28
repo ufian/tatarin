@@ -283,7 +283,7 @@ def message_event(sc, event):
         if parts[-1] == '.':
             parts = parts[:-1]
 
-        if q_type not in ['NUMBER', 'SHIFT'] or q_param is None or isinstance(q_param, int) and q_param < 2:
+        if q_type not in ['NUMBER', 'SHIFT'] or q_param is None or isinstance(q_param, int) and q_param < 1:
             parts.append('.')
             parts.append('Попробуй `вопросы за 2 подкаста`')
 
