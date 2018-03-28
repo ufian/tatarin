@@ -283,8 +283,9 @@ def message_event(sc, event):
         if parts[-1] == '.':
             parts = parts[:-1]
 
-        parts.append('.')
-        parts.append('Попробуй `вопросы за 2 подкаста`')
+        if q_type not in ['NUMBER', 'SHIFT']:
+            parts.append('.')
+            parts.append('Попробуй `вопросы за 2 подкаста`')
 
         return '\n'.join(parts)
     
