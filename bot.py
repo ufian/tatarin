@@ -72,7 +72,7 @@ def _is_question(sc, event):
         return False
     
     if _is_bot_mention(sc, event):
-        tatarin_aliases = ['<@U74JZCPA5>', '@tatarin']
+        tatarin_aliases = ['<@U9WCFRZSB>', '@tatarin']
         return any(msg.startswith(alias) for alias in tatarin_aliases)
     
     if _is_direct_message(sc, event):
@@ -220,7 +220,7 @@ def _question_text(text):
     prefixes = [
         'вопрос:',
         'внимание, вопрос:',
-        '<@u74jzcpa5>',
+        '<@u9wcfrzsb>',
         '@tatarin'
     ]
     
@@ -279,9 +279,13 @@ def message_event(sc, event):
                     parts.append("*{0}*. {1}".format(i, q))
                 parts.append('.')
         
+        
         if parts[-1] == '.':
             parts = parts[:-1]
-        
+
+        parts.append('.')
+        parts.append('Попробуй `вопросы за 2 подкаста`')
+
         return '\n'.join(parts)
     
     if _is_question(sc, event):
