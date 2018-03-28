@@ -197,7 +197,7 @@ def _process_event(event):
     user = event.get('user')
     
     if not timestamp or not user:
-        return True
+        return False
     
     if user == u'U74JZCPA5':
         return False

@@ -8,6 +8,7 @@ import os
 import time
 import logging
 import datetime as dt
+import json
 
 from slackclient import SlackClient
 
@@ -34,17 +35,20 @@ logger = logging.getLogger(__name__)
 
 def handle(sc, events):
     for event in events:
-        logging.info('Event: {0}'.format(event))
+        logging.info('Event: {0}'.format(json.dumps(event, indent=2)))
         event_type = event.get('type', 'None')
         if event_type == 'message':
             reply = handle_message(sc, event)
             
             if reply is not None:
-                sc.rtm_send_message(
-                  channel=event.get('channel'),
-                  message=reply,
+                
+                logging.warning("Send message {}:\n{}".format(event.get('channel'), reply))
+                res = sc.api_call(
+                    "chat.postMessage",
+                    channel=event.get('channel'),
+                    text=reply
                 )
-        
+
 def handle_message(sc, event):
     subtype = event.get('subtype', '')
     
@@ -67,9 +71,10 @@ def main():
             get_connect()
         
             if sc.rtm_connect():
-                sc.rtm_send_message(
-                    channel=u'D754XJPGA',
-                    message='Restarted {0}'.format(dt.datetime.now()),
+                sc.api_call(
+                    "chat.postMessage",
+                    channel=u'D9VF86DHT',
+                    text='Restarted {0}'.format(dt.datetime.now())
                 )
                 
                 counter = 0

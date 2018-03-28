@@ -1,4 +1,4 @@
-slackclient==1.0.9
+slackclient
 pymongo==3.5.1
 mongoengine==0.13.0
 python-dateutil==2.6.1
