@@ -256,7 +256,7 @@ def message_event(sc, event):
         
         parts = ['Вопросы с *{0}* ({1})'.format(podcast_name, podcast_dt.strftime('%d %b %Y %H:%M:%S'))]
         questions = defaultdict(list)
-        for q in Questions.objects(user__ne="USLACKBOT", text__endswith='?', date__gt=podcast_dt).order_by('+date'):
+        for q in Questions.objects(user__ne="USLACKBOT", text__exists=True, date__gt=podcast_dt).order_by('+date'):
             questions[q.user].append(q)
         
         cache = set()
