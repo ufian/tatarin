@@ -1,3 +1,5 @@
+websocket
+requests
 slackclient
 pymongo==3.5.1
 mongoengine==0.13.0

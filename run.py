@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 
-
 __author__ = 'ufian'
 
 import os
@@ -15,7 +14,6 @@ from slackclient import SlackClient
 from websocket import WebSocketConnectionClosedException
 from socket import error as SocketError
 
-
 try:
     from slackclient._client import \
         SlackNotConnected  # not actually used, see https://github.com/slackapi/python-slackclient/issues/36
@@ -27,10 +25,7 @@ except ImportError:
 from bot import message_event, get_connect
 import slackbot_settings as config
 
-
 logger = logging.getLogger(__name__)
-
-
 
 
 def handle(sc, events):
@@ -39,46 +34,44 @@ def handle(sc, events):
         event_type = event.get('type', 'None')
         if event_type == 'message':
             reply = handle_message(sc, event)
-            
+
             if reply is not None:
-                
                 logging.warning("Send message {}:\n{}".format(event.get('channel'), reply))
-                res = sc.api_call(
+                sc.api_call(
                     "chat.postMessage",
                     channel=event.get('channel'),
                     text=reply
                 )
 
+
 def handle_message(sc, event):
-    subtype = event.get('subtype', '')
-    
     reply = message_event(sc, event)
-        
+
     return reply
 
 
 def main():
     log_level = os.getenv("LOG_LEVEL", "INFO") or "INFO"
     logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', level=log_level)
-    
+
     slack_token = getattr(config, "API_TOKEN", os.getenv("SLACK_TOKEN", ""))
     logging.info("token: {}".format(slack_token))
-    
+
     while True:
         try:
             sc = SlackClient(slack_token)
-            
+
             get_connect()
-        
+
             if sc.rtm_connect():
                 sc.api_call(
                     "chat.postMessage",
                     channel=u'D9VF86DHT',
                     text='Restarted {0}'.format(dt.datetime.now())
                 )
-                
+
                 counter = 0
-                
+
                 while True:
                     try:
                         handle(sc, sc.rtm_read())
