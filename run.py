@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals, print_function
 
-
 __author__ = 'ufian'
 
 import os
@@ -25,7 +24,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 def main():
     log_level = os.getenv("LOG_LEVEL", "INFO") or "INFO"
     logging.basicConfig(format='%(asctime)s - %(levelname)s: %(message)s', level=log_level)
-    
+
     slack_token = getattr(config, "API_TOKEN", os.getenv("SLACK_TOKEN", ""))
     logging.info("token: {}".format(slack_token))
 
