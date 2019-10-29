@@ -252,7 +252,7 @@ def message_event(event):
 
         return '\n'.join(parts)
 
-    if _is_question(sc, event):
+    if _is_question(event):
         user = event['user']
         if Questions.objects(user=user, date__gt=dt.datetime.now() - dt.timedelta(days=1)).count() >= 3:
             return "Хватит, <@{0}>, присылать вопросы. Татарин советует вернуться завтра.".format(user)
