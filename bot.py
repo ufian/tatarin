@@ -292,7 +292,7 @@ def message_event(sc, event):
     if _is_question(sc, event):
         user = event['user']
         if Questions.objects(user=user, date__gt=dt.datetime.now() - dt.timedelta(days=1)).count() >= 3:
-            return "Хватит, <@{0}>, присылать вопросы. Татрин советует вернуться завтра.".format(user)
+            return "Хватит, <@{0}>, присылать вопросы. Татарин советует вернуться завтра.".format(user)
         
         q = Questions(
             user=event['user'],
@@ -301,4 +301,4 @@ def message_event(sc, event):
         )
         q.save()
         
-        return "Принято"
+        return "Принято. Большое татарское спасибо!"
