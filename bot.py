@@ -284,9 +284,11 @@ def message_event(sc, event):
         if Questions.objects(user=user, date__gt=dt.datetime.now() - dt.timedelta(days=1)).count() >= 3:
             return "Хватит, <@{0}>, присылать вопросы. Татарин советует вернуться завтра.".format(user)
 
+        url = 'https://podtema.slack.com/archives/{0}/p{1}'.format(event['channel'], event['ts'].replace('.', ''))
+
         q = Questions(
             user=event['user'],
-            text=msg,
+            text='{0} ({1})'.format(msg, url),
             date=dt.datetime.now()
         )
         q.save()

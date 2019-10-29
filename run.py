@@ -76,8 +76,8 @@ def main():
                     try:
                         handle(sc, sc.rtm_read())
                         counter = 0
-                    except:
-                        logging.exception('Problem')
+                    except Exception as e:
+                        logging.exception('Problem: ' + str(e))
                         if counter < 5:
                             counter += 1
                         else:
@@ -85,11 +85,11 @@ def main():
                     time.sleep(1)
             else:
                 logging.error("Connection Failed, invalid token?")
-        except (SocketError, WebSocketConnectionClosedException, SlackConnectionError, SlackNotConnected):
+        except (SocketError, WebSocketConnectionClosedException, SlackConnectionError, SlackNotConnected) as e:
             if not SlackClient(slack_token).rtm_connect():
-                logging.exception('Global reconnect problem')
-        except:
-            logging.exception('Global problem. Recreate app')
+                logging.exception('Global reconnect problem: ' + str(e))
+        except Exception as e:
+            logging.exception('Global problem. Recreate app, error:' + str(e))
             time.sleep(1)
 
 
