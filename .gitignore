@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *$py.class
+slackbot_settings.py
 
 # C extensions
 *.so

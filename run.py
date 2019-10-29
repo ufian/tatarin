@@ -5,57 +5,22 @@ from __future__ import unicode_literals, print_function
 __author__ = 'ufian'
 
 import os
-import time
 import logging
-import datetime as dt
 import json
+import asyncio
+import uvloop
+import sys
 
-from slackclient import SlackClient
+from slack import RTMClient, WebClient
 
-from websocket import WebSocketConnectionClosedException
-from socket import error as SocketError
-
-
-try:
-    from slackclient._client import \
-        SlackNotConnected  # not actually used, see https://github.com/slackapi/python-slackclient/issues/36
-    from slackclient._server import SlackConnectionError
-except ImportError:
-    SlackNotConnected = SocketError
-    SlackConnectionError = SocketError
-
-from bot import message_event, get_connect
+from tatarin.model import get_connect
+import tatarin.bot
+from tatarin.bot import message_event
 import slackbot_settings as config
 
-
 logger = logging.getLogger(__name__)
-
-
-
-
-def handle(sc, events):
-    for event in events:
-        logging.info('Event: {0}'.format(json.dumps(event, indent=2)))
-        event_type = event.get('type', 'None')
-        if event_type == 'message':
-            reply = handle_message(sc, event)
-            
-            if reply is not None:
-                
-                logging.warning("Send message {}:\n{}".format(event.get('channel'), reply))
-                res = sc.api_call(
-                    "chat.postMessage",
-                    channel=event.get('channel'),
-                    text=reply
-                )
-
-def handle_message(sc, event):
-    subtype = event.get('subtype', '')
-    
-    reply = message_event(sc, event)
-        
-    return reply
-
+loop = asyncio.get_event_loop()
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 def main():
     log_level = os.getenv("LOG_LEVEL", "INFO") or "INFO"
@@ -63,41 +28,37 @@ def main():
     
     slack_token = getattr(config, "API_TOKEN", os.getenv("SLACK_TOKEN", ""))
     logging.info("token: {}".format(slack_token))
+
+    get_connect()
     
-    while True:
+    @RTMClient.run_on(event="open")
+    def open_handler(web_client: WebClient, **kwargs):
         try:
-            sc = SlackClient(slack_token)
-            
-            get_connect()
+            bot_info = web_client.auth_test(token=slack_token)
+            assert bot_info["ok"]
+            assert bot_info["user_id"]
+            tatarin.bot.BOT_ID = bot_info["user_id"]
+        except Exception as e:
+            logging.exception("error:", exc_info=sys.exc_info())
+
+
+    @RTMClient.run_on(event="message")
+    def message_handler(data, web_client, **kwargs):
+        try:
+            logging.info('Payload: {0}'.format(json.dumps(data, indent=2)))
         
-            if sc.rtm_connect():
-                sc.api_call(
-                    "chat.postMessage",
-                    channel=u'D9VF86DHT',
-                    text='Restarted {0}'.format(dt.datetime.now())
+            reply = message_event(data)
+            logging.info("Reply: {0} {1}".format(reply, data.get('channel')))
+            if reply is not None:
+                web_client.chat_postMessage(
+                    channel=data.get('channel'),
+                    text=reply
                 )
-                
-                counter = 0
-                
-                while True:
-                    try:
-                        handle(sc, sc.rtm_read())
-                        counter = 0
-                    except:
-                        logging.exception('Problem')
-                        if counter < 5:
-                            counter += 1
-                        else:
-                            raise
-                    time.sleep(1)
-            else:
-                logging.error("Connection Failed, invalid token?")
-        except (SocketError, WebSocketConnectionClosedException, SlackConnectionError, SlackNotConnected):
-            if not SlackClient(slack_token).rtm_connect():
-                logging.exception('Global reconnect problem')
-        except:
-            logging.exception('Global problem. Recreate app')
-            time.sleep(1)
+        except Exception as e:
+            logging.exception("error:", exc_info=sys.exc_info())
+
+    sc = RTMClient(token=slack_token, loop=loop, auto_reconnect=True)
+    sc.start()
 
 
 if __name__ == "__main__":

@@ -12,81 +12,50 @@ from collections import defaultdict
 
 import requests as r
 
-import slackbot_settings as config
-
-import mongoengine as me
+from tatarin.model import Messages, Questions
 
 
 logger = logging.getLogger(__name__)
 
+BOT_ID = None
 
-def get_connect():
-    return me.connect(
-        config.DB['db'],
-        host=config.DB['host'],
-        port=config.DB['port'],
-        serverSelectionTimeoutMS=2500
-    )
-
-
-class Messages(me.Document):
-    meta = {'collection': 'questions'}
+def _is_bot_mention(event):
+    if BOT_ID is None:
+        return False
     
-    timestamp = me.DecimalField(precision=6)
-    user = me.StringField()
-    data = me.DictField()
-
-
-class Questions(me.Document):
-    meta = {'collection': 'questions'}
-    
-    user = me.StringField(required=True)
-    text = me.StringField(required=True)
-    date = me.DateTimeField(required=True)
-
-
-class User(me.Document):
-    meta = {'collection': 'questions'}
-    
-    user = me.StringField(required=True)
-    admin = me.BooleanField(required=True)
-
-
-def _is_bot_mention(sc, event):
-    bot_user_name = sc.server.login_data['self']['id']
-    if re.search("@{}".format(bot_user_name), event.get('text', '')):
+    if re.search("@{}".format(BOT_ID), event.get('text', '')):
         return True
     else:
         return False
 
 
-def _is_direct_message(sc, event):
+def _is_direct_message(event):
     return event.get('channel').startswith('D')
 
 
-def _is_question(sc, event):
+def _is_question(event):
     msg = event['text']
     msg_lower = msg.lower().rstrip()
     
     if not msg_lower.endswith('?'):
         return False
     
-    if _is_bot_mention(sc, event):
-        tatarin_aliases = ['<@U9WCFRZSB>', '@tatarin']
+    if _is_bot_mention(event):
+        tatarin_aliases = ['<@{}>'.format(BOT_ID), '@tatarin']
         return any(msg.startswith(alias) for alias in tatarin_aliases)
     
-    if _is_direct_message(sc, event):
+    if _is_direct_message(event):
         return True
     
     question_forms = ['вопрос:', 'внимание, вопрос:']
     return any(msg_lower.startswith(form) for form in question_forms)
 
 
-def _is_questions_request(sc, event):
+def _is_questions_request(event):
     msg = event['text']
     msg_lower = msg.lower().rstrip()
     
-    if not _is_direct_message(sc, event):
+    if not _is_direct_message(event):
         return False
     
     return 'вопросы' in msg_lower
@@ -234,13 +203,13 @@ def _question_text(text):
     return text.strip()
 
 
-def message_event(sc, event):
+def message_event(event):
     if not _process_event(event):
         return
     
     msg = event['text']
     
-    if _is_questions_request(sc, event):
+    if _is_questions_request(event):
         q_type, q_param = _get_questions_type(event)
         if q_type == 'HELP':
             return q_param
@@ -289,7 +258,7 @@ def message_event(sc, event):
 
         return '\n'.join(parts)
     
-    if _is_question(sc, event):
+    if _is_question(event):
         user = event['user']
         if Questions.objects(user=user, date__gt=dt.datetime.now() - dt.timedelta(days=1)).count() >= 3:
             return "Хватит, <@{0}>, присылать вопросы. Татарин советует вернуться завтра.".format(user)
