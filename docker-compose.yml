@@ -7,6 +7,9 @@ networks:
 
 services:
   twitoryback:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: ufian/tatarin
     restart: always
     environment:
