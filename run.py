@@ -7,8 +7,6 @@ __author__ = 'ufian'
 import os
 import logging
 import json
-import asyncio
-import uvloop
 import sys
 
 from slack import RTMClient, WebClient
@@ -19,8 +17,6 @@ from tatarin.bot import message_event
 import slackbot_settings as config
 
 logger = logging.getLogger(__name__)
-loop = asyncio.get_event_loop()
-asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 def main():
     log_level = os.getenv("LOG_LEVEL", "INFO") or "INFO"
@@ -57,7 +53,7 @@ def main():
         except Exception as e:
             logging.exception("error:", exc_info=sys.exc_info())
 
-    sc = RTMClient(token=slack_token, loop=loop, auto_reconnect=True)
+    sc = RTMClient(token=slack_token, auto_reconnect=True)
     sc.start()
 
 
