@@ -13,7 +13,7 @@ import sys
 from slack import RTMClient, WebClient
 
 from tatarin.model import get_connect
-import tatarin.bot
+import tatarin
 from tatarin.bot import message_event
 import slackbot_settings as config
 
@@ -36,7 +36,7 @@ def main():
             bot_info = web_client.auth_test(token=slack_token)
             assert bot_info["ok"]
             assert bot_info["user_id"]
-            tatarin.bot.BOT_ID = bot_info["user_id"]
+            tatarin.BOT_ID = bot_info["user_id"]
         except Exception as e:
             logging.exception("error:", exc_info=sys.exc_info())
 
