@@ -42,7 +42,7 @@ def main():
 
 
     @RTMClient.run_on(event="message")
-    def message_handler(data, web_client, **kwargs):
+    def message_handler(data, web_client: WebClient, **kwargs):
         try:
             logging.info('Payload: {0}'.format(json.dumps(data, indent=2)))
         
@@ -53,6 +53,17 @@ def main():
                     channel=data.get('channel'),
                     text=reply
                 )
+        except Exception as e:
+            logging.exception("error:", exc_info=sys.exc_info())
+
+    @RTMClient.run_on(event="channel_created")
+    def message_handler(data, web_client: WebClient, **kwargs):
+        try:
+            logging.info('Payload: {0}'.format(json.dumps(data, indent=2)))
+
+            channel = data['channel']
+            web_client.channels_join(name="#{}".format(channel['name']))
+
         except Exception as e:
             logging.exception("error:", exc_info=sys.exc_info())
 
