@@ -62,7 +62,11 @@ def main():
             logging.info('Payload: {0}'.format(json.dumps(data, indent=2)))
 
             channel = data['channel']
-            web_client.channels_join(name="#{}".format(channel['name']))
+            if hasattr(config, "DIRECT_MESSAGE"):
+                web_client.chat_postMessage(
+                    channel=config.DIRECT_MESSAGE,
+                    text="Created channel #{}".format(channel['name'])
+                )
 
         except Exception as e:
             logging.exception("error:", exc_info=sys.exc_info())
