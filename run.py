@@ -8,7 +8,9 @@ import logging
 import json
 import asyncio
 import uvloop
+import random
 import sys
+import time
 
 from slack import RTMClient, WebClient
 
@@ -29,7 +31,9 @@ def main():
     logging.info("token: {}".format(slack_token))
 
     get_connect()
-    
+
+    typing_storage = dict()
+
     @RTMClient.run_on(event="open")
     def open_handler(web_client: WebClient, **kwargs):
         try:
@@ -57,7 +61,7 @@ def main():
             logging.exception("error:", exc_info=sys.exc_info())
 
     @RTMClient.run_on(event="channel_created")
-    def message_handler(data, web_client: WebClient, **kwargs):
+    def channel_created_handler(data, web_client: WebClient, **kwargs):
         try:
             logging.info('Payload: {0}'.format(json.dumps(data, indent=2)))
 
@@ -70,6 +74,52 @@ def main():
 
         except Exception as e:
             logging.exception("error:", exc_info=sys.exc_info())
+
+    @RTMClient.run_on(event="user_typing")
+    def user_typing_handler(data, web_client: WebClient, **kwargs):
+        tempaltes = [
+            "<@{}> Ты там поэму что ли строчишь?",
+            "<@{}> Я ожидаю что-то очень интересное",
+            "<@{}> Ну сколько можно! Я устал ждать твоего сообщения"
+        ]
+
+        try:
+            logging.info('Payload user_typing: {0}'.format(json.dumps(data, indent=2)))
+
+            key = (data['channel'], data['user'])
+            story = typing_storage.get(key, {})
+
+            current = time.time()
+            started = story.get('started', current)
+            notify = story.get('notify', False)
+            prev = story.get('prev', current)
+
+            if (current - prev) > 30:
+                typing_storage[key] = {
+                    'prev': current,
+                    'started': current,
+                    'notify': False
+                }
+                return
+
+            if (current - started) > 3 * 60 and not notify:
+                notify = True
+
+                channel, user = key
+                web_client.chat_postMessage(
+                    channel=channel,
+                    text=random.choice(tempaltes).format(user)
+                )
+
+            typing_storage[key] = {
+                'prev': current,
+                'started': started,
+                'notify': notify
+            }
+
+        except Exception as e:
+            logging.exception("error:", exc_info=sys.exc_info())
+
 
     sc = RTMClient(token=slack_token, loop=loop, auto_reconnect=True)
     sc.start()
