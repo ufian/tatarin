@@ -1,7 +1,7 @@
 from collections import defaultdict
 
 import tatarin
-from tatarin.model import Questions
+from tatarin.model import Questions, TelegramQuestions
 from tatarin.podcast import Podcast
 from tatarin.utils import is_direct_message
 
@@ -57,8 +57,7 @@ def _question_text(text):
     return text.strip()
 
 
-def _process_podcast(podcast_dt, podcast_name):
-    parts = ['Вопросы с *{0}* ({1})'.format(podcast_name, podcast_dt.strftime('%d %b %Y %H:%M:%S'))]
+def _add_slack_questions(parts, podcast_dt):
     questions = defaultdict(list)
     for q in Questions.objects(user__ne="USLACKBOT", text__exists=True, date__gt=podcast_dt).order_by('+date'):
         questions[q.user].append(q)
@@ -82,6 +81,55 @@ def _process_podcast(podcast_dt, podcast_name):
             for i, q in enumerate(list_q, start=1):
                 parts.append("*{0}*. {1}".format(i, q))
             parts.append('.')
+
+def _add_telegram_questions(parts, podcast_dt):
+    parts.append('Вопросы из *Telegram*')
+
+    questions = defaultdict(list)
+    for q in TelegramQuestions.objects(date__gt=podcast_dt).order_by('+date'):
+        group_key = q.data.get('from', {}).get('id', None) or q.user
+        questions[group_key].append(q)
+
+    cache = set()
+    for group_key, user_q in questions.items():
+        list_q = list()
+
+        from_name = None
+
+        for q in user_q:
+            text = q.data.get('text', "")
+
+            if 'from' in q.data:
+                t_from = q.data['from']
+                t_name = "{}"
+                if 'username' in t_from:
+                    t_name = "@" + t_from['username'] + " ({})"
+
+                fl_names = filter(None, [t_from.get('first_name'), t_from.get('last_name')])
+
+                if t_name != "{}" or fl_names:
+                    from_name = t_name.format(" ".join(fl_names))
+
+            if text in cache:
+                continue
+            if len(text) < 10:
+                continue
+            list_q.append(text)
+            cache.add(text)
+
+
+        if list_q:
+            parts.append('*Вопросы от* {0}:'.format(from_name or group_key))
+
+            for i, q in enumerate(list_q, start=1):
+                parts.append("*{0}*. {1}".format(i, q))
+            parts.append('.')
+
+def _process_podcast(podcast_dt, podcast_name):
+    parts = ['Вопросы с *{0}* ({1})'.format(podcast_name, podcast_dt.strftime('%d %b %Y %H:%M:%S'))]
+
+    _add_slack_questions(parts, podcast_dt)
+    _add_telegram_questions(parts, podcast_dt)
 
     if parts[-1] == '.':
         parts = parts[:-1]

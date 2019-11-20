@@ -19,3 +19,11 @@ class Questions(me.Document):
     user = me.StringField(required=True)
     text = me.StringField(required=True)
     date = me.DateTimeField(required=True)
+
+
+class TelegramQuestions(me.Document):
+    meta = {'collection': 'telegram'}
+
+    date = me.DateTimeField(required=True)
+    user = me.StringField()
+    data = me.DictField()
