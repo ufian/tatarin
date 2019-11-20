@@ -94,7 +94,7 @@ def main():
             notify = story.get('notify', False)
             prev = story.get('prev', current)
 
-            if (current - prev) > 30:
+            if (current - prev) > 13:
                 typing_storage[key] = {
                     'prev': current,
                     'started': current,
