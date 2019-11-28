@@ -9,9 +9,11 @@ import sys
 from tatarin.model import Messages
 import tatarin.history_request_handler as history_request_handler
 import tatarin.question_handler as question_handler
+import tatarin.stats_handler as stats_handler
 
 HANDLERS = [
     history_request_handler.handler,
+    stats_handler.handler,
     question_handler.handler
 ]
 
