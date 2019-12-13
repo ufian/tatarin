@@ -52,10 +52,18 @@ def main():
         
             reply = message_event(data)
             logging.info("Reply: {0} {1}".format(reply, data.get('channel')))
+
             if reply is not None:
+                if isinstance(reply, tuple):
+                    chat, message = reply
+                else:
+                    chat, message = data.get('channel'), reply
+
+                chat = chat.lstrip("#")
+
                 web_client.chat_postMessage(
-                    channel=data.get('channel'),
-                    text=reply
+                    channel=chat,
+                    text=message
                 )
         except Exception as e:
             logging.exception("error:", exc_info=sys.exc_info())
