@@ -13,7 +13,7 @@ def _is_question(data):
     msg = data['text']
     msg_lower = msg.lower().rstrip()
 
-    if not msg_lower.endswith('?'):
+    if not (msg_lower.endswith('?') or '? ' in msg_lower):
         return False
 
     if is_bot_mention(data):
