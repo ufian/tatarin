@@ -16,7 +16,7 @@ class TestQuestions(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        tatarin.bot.BOT_ID = cls.BOT_ID
+        tatarin.BOT_ID = cls.BOT_ID
         conn = me.connect('mongoenginetest', host='mongomock://localhost')
         cls.MONGO_MOCK: DatabaseStore = conn.mongoenginetest
         cls.MONGO_MOCK.create_collection(cls.COLLECTION)
