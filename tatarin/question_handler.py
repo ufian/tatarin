@@ -3,17 +3,22 @@
 __author__ = 'ufian'
 
 import datetime as dt
+import re
 
 import tatarin
 from tatarin.model import Questions
 from tatarin.utils import is_bot_mention, is_direct_message
+
+QUESTION_PATTERN = re.compile(r'(\w{2,})\?')
 
 
 def _is_question(data):
     msg = data['text']
     msg_lower = msg.lower().rstrip()
 
-    if not msg_lower.endswith('?'):
+    words = set(QUESTION_PATTERN.findall(msg_lower))
+
+    if not words or (len(words) == 1 and 'tatarin' in words):
         return False
 
     if is_bot_mention(data):
